@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h> // For exit() function
+int main()
+{
+    unsigned char buffer[10];
+    FILE *ptrSrc;
+
+    ptrSrc = fopen("audiosIn/pink_panther.au","rb");  // r for read, 
+
+    FILE *ptrDest;
+    ptrDest = fopen("audiosOut/result.au","wb");  // w for write, 
+    /*
+    while(fread(buffer,sizeof(buffer),1,ptrSrc) != 0){// read bytes to our buffer
+        printf("%s", buffer); // prints a series of bytes
+        fwrite(buffer, sizeof(buffer), 1, ptrDest);
+    }
+    */
+
+    for(int i = 0; i < 100; i ++){
+        fread(buffer,sizeof(buffer),1,ptrSrc);
+        printf("%u ", buffer[i]);
+    }
+    printf("\n");
+    fclose(ptrSrc);
+    fclose(ptrDest);
+    
+    return(0);
+    }
+
+
+
