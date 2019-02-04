@@ -161,8 +161,22 @@ int main()
 
     /********************INITIAL PARAMETERS SET*********************/
     
+    //HANDLE EACH OF THE CASES
     if(lossPolicyChosen == 1){
-        printf("\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n");
+        printf("\n");
+        printf("\t\t  #####\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t###   ####\n");
+        printf("\t\t ##   ##\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t   # #\n");
+        printf("\t\t    #\n");
         printf("\t\t*********************************************\n");
         printf("\t\t*      PACKET SIZE: %i                     *\n", packetSize);
         printf("\t\t*      POLICY: Put 0s in lost data          *\n");
@@ -239,8 +253,104 @@ int main()
         return(0);
     }
     if(lossPolicyChosen == 2){
-        printf("NOT YET IMPLEMENTED\n");
-        
+        printf("\n");
+        printf("\t\t  #####\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t###   ####\n");
+        printf("\t\t ##   ##\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t   # #\n");
+        printf("\t\t    #\n");        
+        printf("\t\t*********************************************\n");
+        printf("\t\t*      PACKET SIZE: %i                     *\n", packetSize);
+        printf("\t\t*      POLICY: Replay Last Sample           *\n");
+        printf("\t\t*      LOSS PROBABILITY: %i %%                *\n", packetLossProbability);
+        printf("\t\t*********************************************\n");
+        //FIND SIZE OF FILE
+        fseek(ptrSrc, 0L, SEEK_END);
+        sizeOfFile = ftell(ptrSrc);
+        fseek(ptrSrc, 0L, SEEK_SET);
+
+        //First transmit HEADER WITHOUT LOSS
+        //Just to clarify, if there was any lost in the header bytes,
+        //The file would not be playable anymore at the 
+        //recievers end
+        //Header size is 24 bytes
+        for(int c = 0; c < 24; c++){
+            fread(sampleBuf,sizeof(sampleBuf),1,ptrSrc);
+            fwrite(sampleBuf, sizeof(sampleBuf), 1, ptrDest);
+        }
+
+            printf ("\n>>>SIZE OF INPUT FILE IN BYTES: %i<<<\n", sizeOfFile);
+    
+        //FILL GENERAL BUFFER
+        unsigned char fileDataBuf[sizeOfFile];
+        fillBuf(fileDataBuf, ptrSrc);
+        printDataInFile(fileDataBuf, sizeOfFile);
+        int packetCounter = 0;
+        //SET UP RANDOM
+        int randomNum;
+        srand(time(0));
+        randomNum = rand() % 100 + 1;     
+
+        /*
+        unsigned char zerosPacket[packetSize];
+        for(int i = 0; i < packetSize; i++){//fill zerosPacket with zeros
+            zerosPacket[i] = 0;
+        }
+        */
+        unsigned char tempBuf[packetSize];//This buffer will safe last packet values
+        int lastSampleInLastPacket = 0; //This will save last value of sample in last packet
+        for(int i = 0; i < packetSize; i++){//fill last packet with zeros only to use if first packet containing 
+                                            //samples is lost.
+            tempBuf[i] = 0;
+        }
+        //SEND AUDIO FILE PACKETS
+        printf("\n********************************\n");
+        printf("* STARTING PACKET TRANSMISSION *");
+        printf("\n********************************\n");
+        sleep(1);
+        for(int offset = 24; offset < sizeOfFile; offset += packetSize){
+            //FILL PACKET
+            fillPacket(fileDataBuf, offset, packetBuf, packetSize);//packet starting at "offset" position of file
+            //fillPacket(packetBuf, 0, tempBuf, packetSize);// save contents of current packet to restore if needed
+            //lastSampleInLastPacket = tempBuf[packetSize - 1];
+            //printf("%i\n", lastSampleInLastPacket);            
+            //PACKET ARRIVING TO RECIEVER
+            if(randomNum > limitProb){//PACKET LOSS
+                printf("LOSS!!--> ");
+                //we will send packet containing last packet contents since we've lost contents of the last packet;
+                fwrite(tempBuf, sizeof(tempBuf), 1, ptrDest);
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(tempBuf, packetSize);
+
+                //Update our tempBuf to be all zeros again
+                for(int i = 0; i < packetSize; i++){
+                tempBuf[i] = 0;
+                }
+            }else{//NO LOSS
+                printf("SUCCESS--> ");
+                fwrite(packetBuf, sizeof(packetBuf), 1, ptrDest);
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(packetBuf, packetSize);
+                //Update our tempBuf to be whatever our last packet had
+                fillPacket(packetBuf, 0, tempBuf, packetSize);// save contents of current packet to restore if needed
+            }
+            packetCounter++;
+            randomNum = ((rand() + lastSampleInLastPacket)) % 100 + 1; 
+        }
+
+        printf("\n");
+
+        fclose(ptrSrc);
+        fclose(ptrDest);
+
         return(0);
     }
     if(lossPolicyChosen == 3){
