@@ -195,22 +195,43 @@ int main()
         srand(time(0));
         randomNum = rand() % 100 + 1;     
 
+        unsigned char zerosPacket[packetSize];
+        for(int i = 0; i < packetSize; i++){//fill zerosPacket with zeros
+            zerosPacket[i] = 0;
+        }
+        unsigned char tempBuf[packetSize];//This buffer will safe last packet values
+        int lastSampleInLastPacket = 0; //This will save last value of sample in last packet
         //SEND AUDIO FILE PACKETS
         printf("\n********************************\n");
         printf("* STARTING PACKET TRANSMISSION *");
         printf("\n********************************\n");
-        sleep(4);
+        sleep(1);
         for(int offset = 24; offset < sizeOfFile; offset += packetSize){
             //FILL PACKET
             fillPacket(fileDataBuf, offset, packetBuf, packetSize);//packet starting at "offset" position of file
-            printf("PACKET #%i: ", packetCounter);
-            printPacketContents(packetBuf, packetSize);
+            fillPacket(packetBuf, 0, tempBuf, packetSize);// save contents of current packet to restore if needed
+            lastSampleInLastPacket = tempBuf[packetSize - 1];
+            //printf("%i\n", lastSampleInLastPacket);
+            
             //PACKET ARRIVING TO RECIEVER
-            fwrite(packetBuf, sizeof(packetBuf), 1, ptrDest);
+            if(randomNum > limitProb){//PACKET LOSS
+                printf("LOSS!!--> ");
+                //we will send packet containing all zeros;
+                fwrite(zerosPacket, sizeof(zerosPacket), 1, ptrDest);
+                
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(zerosPacket, packetSize);
+            }else{//NO LOSS
+                printf("SUCCESS--> ");
+                fwrite(packetBuf, sizeof(packetBuf), 1, ptrDest);
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(packetBuf, packetSize);
+            }
             packetCounter++;
+            randomNum = ((rand() + lastSampleInLastPacket)) % 100 + 1; 
         }
 
-            printf("\n");
+        printf("\n");
 
         fclose(ptrSrc);
         fclose(ptrDest);
@@ -219,6 +240,7 @@ int main()
     }
     if(lossPolicyChosen == 2){
         printf("NOT YET IMPLEMENTED\n");
+        
         return(0);
     }
     if(lossPolicyChosen == 3){
