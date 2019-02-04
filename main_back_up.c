@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include<time.h> 
+#include<dos.h>
 
 void fillBuf (unsigned char * buf, FILE *ptrSrc){
     int byteCounter = 0;
@@ -14,21 +15,15 @@ void fillBuf (unsigned char * buf, FILE *ptrSrc){
 }
 
 void printDataInFile(unsigned char * buf, int bufSize){
-    int counterh = 1;
     int h = 0;
-    printf("\n\tBYTES IN THE FILE:\n");
-    printf("\t*****HEADER*****************************************************************\n");
-    printf("\t");
+    printf("\nBYTES IN THE FILE:\n");
+    printf("*****HEADER*****************************************************************\n");
     for(h = 0; h < 24; h++){
         printf("%u ", buf[h]);
-        if(counterh % 4 == 0){
-            printf("\n\t");
-        }
-        counterh ++;
     }
     printf("\n");
-    printf("\t*****AUDIO SAMPLES**********************************************************\n");
-    printf("\t");
+    printf("*****AUDIO SAMPLES**********************************************************\n");
+
     for(h = 24; h < 33; h++){
         printf("%u ", buf[h]);
     }
@@ -78,7 +73,6 @@ int main()
 
     unsigned char sampleBuf[1];
     unsigned char silence[1];
-    int fileInputChoice;
     silence[0] = 0;
     FILE *ptrSrc;
     FILE *ptrDest;
@@ -87,6 +81,7 @@ int main()
     char *musicOption2 = "audiosIn/simple.au";
     char *musicOption3 = "audiosIn/pink_panther.au";
 
+    int fileInputChoice;
     printf("\nPlease enter file to transmit: \n");
     printf(" _____________________________\n");
     printf("|VOICE FILES                  |\n");
@@ -220,6 +215,54 @@ int main()
         } 
         
    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    else if(lossPolicyChosen == 2){
         printf("\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n");
         printf("\t\t*********************************************\n");
