@@ -53,6 +53,7 @@ void fillPacket (unsigned char * sourceBuf, int offsetSource, unsigned char * de
         offsetSource++;
     }
 }
+
 int main()
 {   
     //Print Header of program
@@ -114,7 +115,7 @@ int main()
     }   
 
 
-    /********************INITIAL PARAME*********************/
+    /********************INITIAL PARAMETERS*********************/
     /*
         samples per packet. Because each sample is a byte 
         this whill mean number of bytes per packet
@@ -268,7 +269,7 @@ int main()
         printf("\t\t   # #\n");
         printf("\t\t    #\n");        
         printf("\t\t*********************************************\n");
-        printf("\t\t*      PACKET SIZE: %i                     *\n", packetSize);
+        printf("\t\t*      PACKET SIZE: %i                       *\n", packetSize);
         printf("\t\t*      POLICY: Replay Last Sample           *\n");
         printf("\t\t*      LOSS PROBABILITY: %i %%                *\n", packetLossProbability);
         printf("\t\t*********************************************\n");
@@ -320,7 +321,7 @@ int main()
             //FILL PACKET
             fillPacket(fileDataBuf, offset, packetBuf, packetSize);//packet starting at "offset" position of file
             //fillPacket(packetBuf, 0, tempBuf, packetSize);// save contents of current packet to restore if needed
-            //lastSampleInLastPacket = tempBuf[packetSize - 1];
+            lastSampleInLastPacket = tempBuf[packetSize - 1];
             //printf("%i\n", lastSampleInLastPacket);            
             //PACKET ARRIVING TO RECIEVER
             if(randomNum > limitProb){//PACKET LOSS
@@ -354,78 +355,104 @@ int main()
         return(0);
     }
     if(lossPolicyChosen == 3){
-        printf("NOT YET IMPLEMENTED\n");
+        printf("Not Yet Implemented");
+        printf("\n");
+        printf("\t\t  #####\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t###   ####\n");
+        printf("\t\t ##   ##\n");
+        printf("\t\t  #   #\n");
+        printf("\t\t   # #\n");
+        printf("\t\t    #\n");
+        printf("\t\t*********************************************\n");
+        printf("\t\t*      PACKET SIZE: %i                     *\n", packetSize);
+        printf("\t\t*      POLICY: Replay Entire Last Packet     *\n");
+        printf("\t\t*      LOSS PROBABILITY: %i %%                *\n", packetLossProbability);
+        printf("\t\t*********************************************\n");
+        //FIND SIZE OF FILE
+        fseek(ptrSrc, 0L, SEEK_END);
+        sizeOfFile = ftell(ptrSrc);
+        fseek(ptrSrc, 0L, SEEK_SET);
+
+        //First transmit HEADER WITHOUT LOSS
+        //Just to clarify, if there was any lost in the header bytes,
+        //The file would not be playable anymore at the 
+        //recievers end
+        //Header size is 24 bytes
+        for(int c = 0; c < 24; c++){
+            fread(sampleBuf,sizeof(sampleBuf),1,ptrSrc);
+            fwrite(sampleBuf, sizeof(sampleBuf), 1, ptrDest);
+        }
+
+            printf ("\n>>>SIZE OF INPUT FILE IN BYTES: %i<<<\n", sizeOfFile);
+    
+        //FILL GENERAL BUFFER
+        unsigned char fileDataBuf[sizeOfFile];
+        fillBuf(fileDataBuf, ptrSrc);
+        printDataInFile(fileDataBuf, sizeOfFile);
+        int packetCounter = 0;
+        //SET UP RANDOM
+        int randomNum;
+        srand(time(0));
+        randomNum = rand() % 100 + 1;  
+
+        unsigned char tempBuf[packetSize];//This buffer will safe last packet values   
+        for(int i = 0; i < packetSize; i++){//Build packet for possible lost packets with 
+            tempBuf[i] = 0;
+        }   
+        int lastSampleInLastPacket = 0; 
+
+        //counter for lost packets
+        int lostPacketCount = 0;
+        //SEND AUDIO FILE PACKETS
+        printf("\n********************************\n");
+        printf("* STARTING PACKET TRANSMISSION *");
+        printf("\n********************************\n");
+        for(int offset = 24; offset < sizeOfFile; offset += packetSize){
+            //FILL PACKET
+            fillPacket(fileDataBuf, offset, packetBuf, packetSize);//packet starting at "offset" position of file
+            //fillPacket(packetBuf, 0, tempBuf, packetSize);// save contents of current packet to restore if needed
+            //sleep(1);
+            //PACKET ARRIVING TO RECIEVER
+            if(randomNum > limitProb){//PACKET LOSS
+                printf("LOSS!!--> ");
+                //we will send packet containing all zeros;
+                fwrite(tempBuf, sizeof(tempBuf), 1, ptrDest);               
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(tempBuf, packetSize);
+                lostPacketCount++;
+            }else{//NO LOSS
+                printf("SUCCESS--> ");
+                fwrite(packetBuf, sizeof(packetBuf), 1, ptrDest);
+                printf("PACKET #%i TRANSMITED: ", packetCounter);
+                printPacketContents(packetBuf, packetSize);
+                //Save last packet to use when losing other packets
+                for(int j = 0; j < packetSize; j++){
+                    tempBuf[j] = packetBuf[j]; 
+                }
+            }
+            packetCounter++;
+            //Generate new random
+            lastSampleInLastPacket = packetBuf[packetSize - 1];
+            randomNum = ((rand() + lastSampleInLastPacket)) % 100 + 1; 
+        }
+        printf("\n******************************\n");
+        printf("* LOST PACKETS: %f %%  \n", (((float) (lostPacketCount * packetSize)/sizeOfFile)*100));
+        printf("******************************");
+        printf("\n");
+
+        fclose(ptrSrc);
+        fclose(ptrDest);
+    
         return(0);
     }
-    
-    
-    
-    /*
-    while(fread(buffer,sizeof(buffer),1,ptrSrc) != 0){// while not EOF...
-        printf("%s", buffer); // prints a series of bytes
-        fwrite(buffer, sizeof(buffer), 1, ptrDest);
-    }
-    */
-
-    
-    
-
-
-
-    
-
-    /*
-    unsigned char myBuf[sizeOfFile];
-    int byteCounter = 0;
-    while(fread(sampleBuf,sizeof(sampleBuf),1,ptrSrc) != 0){ //While there are bytes to transmit...    
-        valueCurrent = sampleBuf[0];
-        myBuf[byteCounter] = valueCurrent;
-        printf("%u ", myBuf[byteCounter]);
-        byteCounter++;
-    }
-    */
-    
-/*
-    while(fread(sampleBuf,sizeof(sampleBuf),1,ptrSrc) != 0){ //While there are bytes to transmit...    
-        if(randomNum > limitProb ){//Sample Loss
-            valueCurrent = sampleBuf[0];
-            fwrite(silence, sizeof(silence), 1, ptrDest);
-        }else{//No Sample Loss
-            unsigned int byteInFile = sampleBuf[0];
-            printf("%u ", byteInFile);
-            fwrite(sampleBuf, sizeof(sampleBuf), 1, ptrDest);
-            valueCurrent = sampleBuf[0];
-        }
-        randomNum = ((rand() + valueCurrent)) % 100 + 1;
-    }
-    */
-
-
-    /*    
-    while(fread(packetBuf,sizeof(packetBuf),packetSize,ptrSrc) != 0){ //While there are bytes to transmit...    
-        if(randomNum > limitProb ){//Sample Loss
-            valueCurrent = sampleBuf[0];
-            fwrite(silence, sizeof(silence), 1, ptrDest);
-        }else{//No Sample Loss
-            unsigned int byteInFile = packetBuf[0];
-            printf("%u ", byteInFile);
-            byteInFile = packetBuf[1];
-            printf("%u ", byteInFile);
-            byteInFile = packetBuf[2];
-            printf("%u ", byteInFile);
-            byteInFile = packetBuf[3];
-            printf("%u ", byteInFile);
-            byteInFile = packetBuf[4];
-            printf("%u ", byteInFile);
-            byteInFile = packetBuf[5];
-            printf("%u ", byteInFile);
-            fwrite(packetBuf, sizeof(packetBuf), 1, ptrDest);
-            valueCurrent = packetBuf[0];
-        }
-        randomNum = ((rand() + valueCurrent)) % 100 + 1;
-    }
-    */
-    } 
+} 
 
     //122 248 121 101 122
     //122 248 121 101 122
