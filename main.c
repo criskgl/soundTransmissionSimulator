@@ -37,7 +37,6 @@ void printDataInFile(unsigned char * buf, int bufSize){
 }
 
 void printPacketContents(unsigned char * packetBuf, int packetSize){
-    int i = 0;
     for(int i = 0; i < packetSize; i++){
         printf("%i ", packetBuf[i]);
     }
@@ -45,7 +44,6 @@ void printPacketContents(unsigned char * packetBuf, int packetSize){
 }
 
 void fillPacket (unsigned char * sourceBuf, int offsetSource, unsigned char * destBuf, int sizeOfDestBuf){
-    int i = 0;
     int currentValue = 0; 
     for (int i = 0; i < sizeOfDestBuf; i++){
         currentValue = sourceBuf[offsetSource];
@@ -66,7 +64,7 @@ int main()
     printf("\t***            >LOSS PROBABILITY                ***\n");
     printf("\t***            >POLICY FOR UNAVAILABLE PACKETS  ***\n");
     printf("\t***                                             ***\n");
-    printf("\t***            author:                          ***\n");
+    printf("\t***            author:  Cristian K. Gómez       ***\n");
     printf("\t***            github:  @criskgl                ***\n");
     printf("\t***************************************************\n");
 
@@ -386,7 +384,7 @@ int main()
         fseek(ptrSrc, 0L, SEEK_END);
         sizeOfFile = ftell(ptrSrc);
         fseek(ptrSrc, 0L, SEEK_SET);
-
+        
         //First transmit HEADER WITHOUT LOSS
         //Just to clarify, if there was any lost in the header bytes,
         //The file would not be playable anymore at the 
